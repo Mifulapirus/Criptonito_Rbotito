@@ -46,7 +46,9 @@ def main():
     print "-------------------------------"
 
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater('346851548:AAGCYjc8FtxGbjlTMeVvfaqPoPb8bWMWsUY')
+    with open('telegramToken.txt', 'r') as f:
+        telegramToken = f.readline().strip()
+    updater = Updater(telegramToken)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -67,6 +69,9 @@ def main():
     # Start the Bot
     updater.start_polling()
 
+
+
+
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
@@ -76,6 +81,7 @@ def main():
             time.sleep(10)
     except KeyboardInterrupt:
         print("CriptonitoBot is sad and letting you go... :(")
+        print("Press Ctrl-C once more to kill me")
 
     updater.idle()
 
