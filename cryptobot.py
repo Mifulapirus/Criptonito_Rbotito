@@ -11,22 +11,26 @@ __email__ = "angel@tupperbot.com"
 __status__ = "beta"
 
 from telegramStuff import *
-
+from krakenStuff import *
 
 def main():
     print "-------------------------------"
     print "|     Criptonito_bot 1.0      |"
     print "-------------------------------"
 
-    robotito = TelegramBot()
-    
+    kraken = Kraken()
+    robotito = TelegramBot(kraken)
+
     try:
         while True:
             #Here we can do other stuff, like periodically check for prices in order to send alerts
-            time.sleep(10)
+            #print("im here")
+            time.sleep(2)
     except KeyboardInterrupt:
         print("CriptonitoBot is sad and letting you go... :(")
-        print("Press Ctrl-C once more to kill me")
+        print("Give me a sec while I kill the threads")
+
+    robotito.killBot()
 
 
 if __name__ == '__main__':

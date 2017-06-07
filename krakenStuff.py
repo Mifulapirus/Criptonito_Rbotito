@@ -1,23 +1,39 @@
 import requests, json
 from pprint import pprint
 
-def getTiket(currency = 'ETH'):
-	url = 'https://api.kraken.com/0/public/Ticker'
-	currency = currency.upper()
-	currency_pair = currency + 'EUR'
-	currency_key = 'X' + currency + 'ZEUR'
-	params = dict(pair=currency_pair)
 
-	resp = requests.get(url=url, params=params)
+class Kraken:
+    def __init__(self):
+        self.assets = self.getAssets()
+        self.assetNameKeys = {}
 
-	pprint(resp)
-	data = json.loads(resp.text)
-	pprint(data)
+        for key, value in self.assets.iteritems():
+            self.assetNameKeys[value['altname']] = key
 
-	current_price = data['result'][currency_key]['c'][0]
-	current_volume = data['result'][currency_key]['c'][1]
+    def getTiket(self, currency = 'ETH'):
+    	url = 'https://api.kraken.com/0/public/Ticker'
+    	currency = currency.upper()
+    	currency_pair = currency + 'EUR'
+    	currency_key = self.assetNameKeys[currency] + 'ZEUR'
+    	params = dict(pair=currency_pair)
 
-	return currency_pair, current_price, current_volume
+    	resp = requests.get(url=url, params=params)
+
+    	pprint(resp)
+    	data = json.loads(resp.text)
+    	pprint(data)
+
+    	current_price = data['result'][currency_key]['c'][0]
+    	current_volume = data['result'][currency_key]['c'][1]
+
+    	return currency_pair, current_price, current_volume
+
+    def getAssets(self):
+        url = 'https://api.kraken.com/0/public/Assets'
+        resp = requests.get(url=url)
+        data = json.loads(resp.text)
+        pprint(data)
+        return data['result']
 
 
 def get_trump():

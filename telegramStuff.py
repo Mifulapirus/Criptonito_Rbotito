@@ -9,7 +9,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 class TelegramBot:
-    def __init__(self):
+    def __init__(self, exchange):
+        self.exchange = exchange
+
         # Create the EventHandler and pass it your bot's token.
         with open('telegramToken.txt', 'r') as f:
             self.telegramToken = f.readline().strip()
@@ -36,8 +38,10 @@ class TelegramBot:
         # start_polling() is non-blocking and will stop the bot gracefully.
         self.updater.start_polling()
 
-        self.updater.idle()
+        #self.updater.idle()
 
+    def killBot(self):
+        self.updater.stop()
 
     # Define a few command handlers. These usually take the two arguments bot and
     # update. Error handlers also receive the raised TelegramError object in error.
@@ -48,12 +52,16 @@ class TelegramBot:
         update.message.reply_text('Help? I can barely help myself')
 
     def processMessage(self, bot, update):
-        print(update.message.text)
-        currency_pair, current_price, current_volume = getTiket(update.message.text)
+        message = update.message.text
 
-        update.message.reply_text("Pair: " + currency_pair +
-                                "\r\nEUR = " + str(current_price) +
-                                "\r\nVolume = " + str(current_volume))
+        if message.upper() in self.exchange.assetNameKeys:
+            currency_pair, current_price, current_volume = self.exchange.getTiket(message)
+            update.message.reply_text("Pair: " + currency_pair +
+                                    "\r\nEUR = " + str(current_price) +
+                                    "\r\nVolume = " + str(current_volume))
+        else:
+            print message, "Not an asset"
+
 
     def error(self, bot, update, error):
         logger.warn('Update "%s" caused error "%s"' % (update, error))
