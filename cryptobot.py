@@ -1,7 +1,7 @@
 """
  Title: Criptobot
  Description: You ask about a price and it just answers
-""" 
+"""
 __author__ = "Angel Hernandez"
 __contributors__ = "Angel Hernandez"
 __license__ = "GPL"
@@ -10,77 +10,75 @@ __maintainer__ = "Angel Hernandez"
 __email__ = "angel@tupperbot.com"
 __status__ = "beta"
 
+from krakenStuff import *
+
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import logging
 import time
-import requests, json
-from pprint import pprint
-import telepot
-from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from telepot.loop import MessageLoop
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Define a few command handlers. These usually take the two arguments bot and
+# update. Error handlers also receive the raised TelegramError object in error.
+def start(bot, update):
+    update.message.reply_text("Hi! I'm Criptonito Bot")
+
+def help(bot, update):
+    update.message.reply_text('Help? I can barely help myself')
+
+def processMessage(bot, update):
+    print(update.message.text)
+    currency_pair, current_price, current_volume = getTiket(update.message.text)
+
+    update.message.reply_text("Pair: " + currency_pair +
+                            "\r\nEUR = " + str(current_price) +
+                            "\r\nVolume = " + str(current_volume))
+
+def error(bot, update, error):
+    logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 
-token = '346851548:AAGCYjc8FtxGbjlTMeVvfaqPoPb8bWMWsUY'
+def main():
+    print "-------------------------------"
+    print "|     Criptonito_bot 1.0      |"
+    print "-------------------------------"
 
+    # Create the EventHandler and pass it your bot's token.
+    updater = Updater('346851548:AAGCYjc8FtxGbjlTMeVvfaqPoPb8bWMWsUY')
 
-def on_chat_message(msg):
-	content_type, chat_type, chat_id = telepot.glance(msg)
-	pprint(msg)
-	currency = msg['text'].replace('@criptonito_bot ', "")
-	currency_pair, current_price, current_volume = getTiket(currency)
-	telegram_send(chat_id, 	"Pair: " + currency_pair + 
-							"\r\nEUR = " + str(current_price) + 
-							"\r\nVolume = " + str(current_volume))
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
 
-def telegram_send(chat_id, text, markup = ""):
-	print "Sending message to " + str(chat_id)
-	print text
-	try:
-		bot.sendMessage(chat_id, text, reply_markup=markup)
-		return True
+    #Send telegram message to Jesus
+    dp.bot.send_message(chat_id=42536066, text="CriptonitoBot Bot Just Started!")
 
-	except Exception as err:
-		print "ERROR sending telegram message: "
-		print err
-		return False
+    # on different commands - answer in Telegram
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help))
 
+    # on noncommand i.e message - Filter by Text (no photos or audios), and process the message
+    dp.add_handler(MessageHandler(Filters.text, processMessage))
 
-def getTiket(currency = 'ETH'):
-	url = 'https://api.kraken.com/0/public/Ticker'
-	currency = currency.upper()
-	currency_pair = currency + 'EUR'
-	currency_key = 'X' + currency + 'ZEUR'
-	params = dict(
-	    pair=currency_pair)
+    # log all
+    dp.add_error_handler(error)
 
-	resp = requests.get(url=url, params=params)
+    # Start the Bot
+    updater.start_polling()
 
-	pprint(resp)
-	data = json.loads(resp.text)
-	pprint(data)
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    try:
+        while True:
+            #Here we can do other stuff, like periodically check for prices in order to send alerts
+            time.sleep(10)
+    except KeyboardInterrupt:
+        print("CriptonitoBot is sad and letting you go... :(")
 
-	current_price = data['result'][currency_key]['c'][0]
-	current_volume = data['result'][currency_key]['c'][1]
+    updater.idle()
 
-	return currency_pair, current_price, current_volume
-
-def get_trump():
-	url = "https://api.whatdoestrumpthink.com/api/v1/quotes/random"
-	resp = requests.get(url=url, params=dict())
-
-	pprint(resp)
-	data = json.loads(resp.text)
-	pprint(data)
 
 if __name__ == '__main__':
-	print "-------------------------------"
-	print "|     Criptonito_bot 1.0      |"
-	print "-------------------------------"
-	#get_trump()
-	try:
-		bot = telepot.Bot(token)
-		MessageLoop(bot, on_chat_message).run_as_thread()
-		while True:
-			time.sleep(10)
-
-	except KeyboardInterrupt:
-		print "CriptonitoBot is sad and letting you go... :("
-		sys.exit()
+    main()
