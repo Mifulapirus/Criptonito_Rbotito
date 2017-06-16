@@ -20,26 +20,35 @@ def main():
 
     kraken = Kraken()
     robotito = TelegramBot(kraken)
+#sad u'\U0001F629'
+#happy u'\U0001F603'
 
     try:
         while True:
             #Here we can do other stuff, like periodically check for prices in order to send alerts
             #print("im here")
-            for key, value in robotito.monitoring.iteritems():
-                thisAlert = value
+            for chatId in robotito.profiles.iterkeys():
+                for key, value in robotito.profiles[chatId].alerts.iteritems():
+                    thisAlert = value
 
-                currency_pair, current_price, current_volume = kraken.getTiket(thisAlert.name)
-                if current_price > thisAlert.maxTriggerPrice or current_price < thisAlert.minTriggerPrice:
-                    print("Alert!!", thisAlert.name, current_price)
-                    robotito.sendMessage(thisAlert.chatId, "Pair: " + currency_pair +
-                                            " is at " + str(round(current_price, 4)) + " " + u'\u20ac')
-                    thisAlert.SetLastPrice(current_price)
-                print thisAlert.name, current_price, thisAlert.maxTriggerPrice, thisAlert.minTriggerPrice
+                    currency_pair, current_price, current_volume = kraken.getTiket(thisAlert.name)
 
-                #if(currency_pair > value.lastPrice * (1 + (percentage / 100))
-                #self.monitoring[name].lastPrice = current_price
+                    if current_price > 0 and (current_price > thisAlert.maxTriggerPrice or current_price < thisAlert.minTriggerPrice):
+                        if current_price > thisAlert.maxTriggerPrice:
+                            emoji = u'\U0001F603'
+                        else:
+                            emoji = u'\U0001F629'
 
-            time.sleep(10)
+                        print("Alert!!", thisAlert.name, current_price)
+                        robotito.sendMessage(chatId, emoji + " Alert: " + currency_pair +
+                                                " is at " + str(round(current_price, 4)) + " " + u'\u20ac')
+                        thisAlert.SetLastPrice(current_price)
+                    print thisAlert.name, current_price, thisAlert.maxTriggerPrice, thisAlert.minTriggerPrice
+
+                    #if(currency_pair > value.lastPrice * (1 + (percentage / 100))
+                    #self.monitoring[name].lastPrice = current_price
+
+            time.sleep(20)
     except KeyboardInterrupt:
         print("CriptonitoBot is sad and letting you go... :(")
         print("Give me a sec while I kill the threads")
