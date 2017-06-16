@@ -5,32 +5,42 @@ from pprint import pprint
 class Kraken:
 	def __init__(self):
 		self.assets = self.getAssets()
+		self.assetPairs = self.getAssetPairs()
 
-		self.assetNameKeys = {}
-		for key, value in self.assets.iteritems():
-			self.assetNameKeys[value['altname']] = key
 
-	def getTiket(self, currency = 'ETH'):
+	def getPair(self, asset, currency = 'EUR'):
+		asset = asset.upper()
+		pairName = asset + currency
+		pair = 'X' + asset + 'Z' + currency
+		if pair in self.assetPairs:
+			return pair
+		else:
+			return None
+
+	def getTiket(self, assetPair):
 		url = 'https://api.kraken.com/0/public/Ticker'
-		currency = currency.upper()
-		currency_pair = currency + 'EUR'
-		currency_key = self.assetNameKeys[currency] + 'ZEUR'
-		params = dict(pair=currency_pair)
+		params = dict(pair=assetPair)
 
 		resp = requests.get(url=url, params=params)
 		try:
 			data = json.loads(resp.text)
 			if len(data["error"]) > 0:
 				return "", -1, 0
-			current_price = data['result'][currency_key]['c'][0]
-			current_volume = data['result'][currency_key]['v'][1]
+			current_price = data['result'][assetPair]['c'][0]
+			current_volume = data['result'][assetPair]['v'][1]
 
-			return currency_pair, float(current_price), float(current_volume)*float(current_price)
+			return float(current_price), float(current_volume)*float(current_price)
 		except:
-			return "", -1, 0
+			return -1, 0
 
 	def getAssets(self):
 		url = 'https://api.kraken.com/0/public/Assets'
+		resp = requests.get(url=url)
+		data = json.loads(resp.text)
+		return data['result']
+
+	def getAssetPairs(self):
+		url = 'https://api.kraken.com/0/public/AssetPairs'
 		resp = requests.get(url=url)
 		data = json.loads(resp.text)
 		return data['result']

@@ -31,7 +31,7 @@ def main():
                 for key, value in robotito.profiles[chatId].alerts.iteritems():
                     thisAlert = value
 
-                    currency_pair, current_price, current_volume = kraken.getTiket(thisAlert.name)
+                    current_price, current_volume = kraken.getTiket(thisAlert.assetPair)
 
                     if current_price > 0 and (current_price > thisAlert.maxTriggerPrice or current_price < thisAlert.minTriggerPrice):
                         if current_price > thisAlert.maxTriggerPrice:
@@ -39,11 +39,11 @@ def main():
                         else:
                             emoji = u'\U0001F629'
 
-                        print("Alert!!", thisAlert.name, current_price)
-                        robotito.sendMessage(chatId, emoji + " Alert: " + currency_pair +
+                        print("Alert!!", thisAlert.assetPair, current_price)
+                        robotito.sendMessage(chatId, emoji + " Alert: " + thisAlert.assetPair +
                                                 " is at " + str(round(current_price, 4)) + " " + u'\u20ac')
                         thisAlert.SetLastPrice(current_price)
-                    print thisAlert.name, current_price, thisAlert.maxTriggerPrice, thisAlert.minTriggerPrice
+                    print thisAlert.assetPair, current_price, thisAlert.maxTriggerPrice, thisAlert.minTriggerPrice
 
                     #if(currency_pair > value.lastPrice * (1 + (percentage / 100))
                     #self.monitoring[name].lastPrice = current_price
