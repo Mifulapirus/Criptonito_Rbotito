@@ -27,7 +27,7 @@ class TelegramBot:
         self.dp = self.updater.dispatcher
 
         #Send init telegram message to Jesus
-        self.dp.bot.send_message(chat_id=42536066, text=u'\U0001F603' + "CriptonitoBot Bot Just Started!")
+        self.dp.bot.send_message(chat_id=self.admins[0], text=u'\U0001F603' + "CriptonitoBot Bot Just Started!")
 
         # on different commands - answer in Telegram
         self.dp.add_handler(CommandHandler("start", self.start))
@@ -68,17 +68,15 @@ class TelegramBot:
         try:
             percentage = float(response[2])
         except ValueError:
-            retur
+            return
         asset = response[1].upper()
         assetPair = self.exchange.getPair(asset)
         if assetPair == None:
+            print("Bad coin for " + asset + ". User " + str(chatId))
+            update.message.reply_text(asset + " is not a valid asset")
             return
 
-        current_price, current_volume = self.exchange.getTiket(assetPair)
-        if current_price == 0:
-            print("Bad coin for " + asset + ". User " + str(chatId))
-            update.message.reply_text("Bad coin")
-            return
+        current_price, current_volume = self.exchange.getTiker(assetPair)
         # /Checks
 
         self.profiles[chatId].alerts[assetPair] = Alert(assetPair, percentage)
@@ -131,12 +129,13 @@ class TelegramBot:
         message = update.message.text
         assetPair = self.exchange.getPair(message)
         if assetPair != None:
-            current_price, current_volume = self.exchange.getTiket(assetPair)
+            current_price, current_volume = self.exchange.getTiker(assetPair)
 
             update.message.reply_text("Pair: " + assetPair +
                                     "\r\nPrice = " + str(round(current_price, 4)) + " " + u'\u20ac' +
                                     "\r\nVolume = " + str(round(current_volume / 1000000, 3)) + " M" + u'\u20ac')
             print update.message.from_user.username, assetPair, current_price, current_volume
+
         if message.upper() == "TRUMP":
             update.message.reply_text(get_trump())
 
