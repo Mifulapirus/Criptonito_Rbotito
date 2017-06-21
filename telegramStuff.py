@@ -121,9 +121,9 @@ class TelegramBot:
     def help(self, bot, update):
         response = '/add coin percentage\r\nPara agregar una alerta\r\n/remove coin\r\nPara eliminar una alerta\r\n'
         response+="I can show you prices for:\r\n"
-        for key, value in self.exchange.assetNameKeys.iteritems():
+        for key, value in self.exchange.assetPairs.iteritems():
             response += key + ", "
-        update.message.reply_text( + response)
+        update.message.reply_text(response)
 
     def processMessage(self, bot, update):
         message = update.message.text
