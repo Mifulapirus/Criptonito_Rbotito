@@ -63,28 +63,32 @@ class TelegramBot:
         if userId not in self.admins:
             update.message.reply_text("You are not an admin")
             return
+
+        update.message.reply_text("Not implemented")
+        return
+
         if len(response) != 3:
             return
         try:
             percentage = float(response[2])
         except ValueError:
             return
-        asset = response[1].upper()
-        assetPair = self.exchange.getPair(asset)
-        if assetPair == None:
-            print("Bad coin for " + asset + ". User " + str(chatId))
-            update.message.reply_text(asset + " is not a valid asset")
+        
+        coin = response[1]
+        if exchange.getCoinInfo(coin) == None:
+            print("Bad coin for " + coin + ". User " + str(chatId))
+            update.message.reply_text(coin + " is not a valid coin")
             return
 
-        current_price, current_volume = self.exchange.getTiker(assetPair)
+        coinInfo = self.exchange.getCoinInfo(coin)
         # /Checks
 
-        self.profiles[chatId].alerts[assetPair] = Alert(assetPair, percentage)
-        self.profiles[chatId].alerts[assetPair].SetLastPrice(current_price)
+        self.profiles[chatId].alerts[coin] = Alert(coin, percentage)
+        self.profiles[chatId].alerts[coin].SetLastPrice(coinInfo.price_usd)
 
         pickle.dump( self.profiles, open( "profiles.p", "wb" ) )
-        print("New alert created for " + assetPair + ". User " + str(chatId))
-        update.message.reply_text("I will alert you if " + assetPair + " changes by more than " + str(percentage) + "%")
+        print("New alert created for " + coin + ". User " + str(chatId))
+        update.message.reply_text("I will alert you if " + coin + " changes by more than " + str(percentage) + "%")
 
 
     def removeAlert(self, bot, update):
@@ -93,10 +97,14 @@ class TelegramBot:
         if userId not in self.admins:
             update.message.reply_text("You are not an admin")
             return
+        
+        update.message.reply_text("Not implemented")
+        return
+
         try:
             response = update.message.text.split(" ")
-            assetPair = self.exchange.getPair(response[1].upper())
-            self.profiles[chatId].alerts.pop(assetPair)
+            coin = response[1]
+            self.profiles[chatId].alerts.pop(coin)
             pickle.dump( self.profiles, open( "profiles.p", "wb" ) )
             update.message.reply_text("Done!")
         except:
@@ -104,6 +112,10 @@ class TelegramBot:
             return
 
     def printAlerts(self, bot, update):
+
+        update.message.reply_text("Not implemented")
+        return
+
         chatId = update.message.chat["id"]
         response = "Alerts:\r\n"
         for key, value in self.profiles[chatId].alerts.iteritems():
@@ -125,19 +137,36 @@ class TelegramBot:
             response += key + ", "
         update.message.reply_text(response)
 
+
     def processMessage(self, bot, update):
         message = update.message.text
-        assetPair = self.exchange.getPair(message)
-        if assetPair != None:
-            current_price, current_volume = self.exchange.getTiker(assetPair)
-
-            update.message.reply_text("Pair: " + assetPair +
-                                    "\r\nPrice = " + str(round(current_price, 4)) + " " + u'\u20ac' +
-                                    "\r\nVolume = " + str(round(current_volume / 1000000, 3)) + " M" + u'\u20ac')
-            print update.message.from_user.username, assetPair, current_price, current_volume
-
         if message.upper() == "TRUMP":
             update.message.reply_text(get_trump())
+        
+        message = update.message.text
+        message = update.message.text.split(" ")
+        if len(message) != 2 or message[0].lower() != "get":
+            return
+
+        coin = message[1]
+        if coin.upper() == "TRUMP":
+            update.message.reply_text("Let's not get Trump here, shall we?")
+            return
+
+        coinInfo = self.exchange.getCoinInfo(coin)
+        if coinInfo == None or "error" in coinInfo:
+            update.message.reply_text("I'm no fool. That's not a coin")
+            return
+        coinInfo = coinInfo[0]
+        update.message.reply_text("Coin Name: " + coinInfo["name"] +
+                                    "\r\nid: " + coinInfo["id"] +
+                                    "\r\nSymbol: " + coinInfo["symbol"] +
+                                    "\r\nPrice = " + str(round(coinInfo["price_eur"], 4)) + " " + u'\u20ac' +
+                                    "\r\n24h Volume = " + str(round(coinInfo["24h_volume_usd"] / 1000000, 3)) + " M " + "USD" +
+                                    "\r\n24h Change = " + str(coinInfo["percent_change_24h"]) + "%" )
+        print update.message.from_user.username, coinInfo
+        return
+        
 
     def error(self, bot, update, error):
         logger.warn('Update "%s" caused error "%s"' % (update, error))
