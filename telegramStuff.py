@@ -1,6 +1,7 @@
 from krakenStuff import *
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import ParseMode
 import logging
 import time
 from collections import defaultdict
@@ -158,12 +159,13 @@ class TelegramBot:
             update.message.reply_text("I'm no fool. That's not a coin")
             return
         coinInfo = coinInfo[0]
-        update.message.reply_text("Coin Name: " + coinInfo["name"] +
+        update.message.reply_text("<code>Coin Name: " + coinInfo["name"] +
                                     "\r\nid: " + coinInfo["id"] +
                                     "\r\nSymbol: " + coinInfo["symbol"] +
                                     "\r\nPrice = " + str(round(coinInfo["price_eur"], 4)) + " " + u'\u20ac' +
                                     "\r\n24h Volume = " + str(round(coinInfo["24h_volume_usd"] / 1000000, 3)) + " M " + "USD" +
-                                    "\r\n24h Change = " + str(coinInfo["percent_change_24h"]) + "%" )
+                                    "\r\n24h Change = " + str(coinInfo["percent_change_24h"]) + "%" + "</code>", parse_mode=ParseMode.HTML)
+        
         print update.message.from_user.username, coinInfo
         return
         
