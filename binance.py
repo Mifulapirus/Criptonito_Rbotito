@@ -19,6 +19,12 @@ class Binance:
         else:
             return False
 
+    def checkIfBaseAsset(self, baseAsset):
+        if any(tempDict['baseAsset'] == baseAsset for tempDict in self.availablePairs):
+            return True
+        else:
+            return False
+
     def getPrice(self, pair):
         if self.checkIfPairExists(pair):
             result = []

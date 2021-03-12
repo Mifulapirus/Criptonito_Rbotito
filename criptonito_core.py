@@ -32,13 +32,14 @@ import binance
 
 #Default Paths
 ownName = os.path.basename(__file__)
-ownPath = sys.argv[0].replace('/' + ownName, '')
+ownPath = sys.argv[0].replace('\\' + ownName, '')
 logsPath = ownPath + "//logs"
-ownLogPath = logsPath + "//criptonito.log"
+ownLogPath = logsPath + "/criptonito.log"
 configurationPath = ownPath + "//config.ini"
 
 # read configuration
 config = ConfigParser()
+print(ownPath)
 config.read(configurationPath, "utf8")
 timeout = int(config.get("telegram", "timeout"))
 owner_id = str(config.get("telegram", "owner_id"))
@@ -78,14 +79,36 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 def checkForPair(update, context):
     """Echo the user message."""
-    text = update.message.text
-    if binance.checkIfPairExists(text):
-        logger.info("Pair detected " + text)
-        pairInfo = binance.getPrice(text)
-        msg =       "*" + text + "*\n"
-        msg = msg + "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
-        update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
+    text = update.message.text.upper()    
+    for word in text.split():
+        print("Checking for pair on text: " + word)
+        if binance.checkIfPairExists(word):
+            logger.info("Pair detected " + word)
+            pairInfo = binance.getPrice(word)
+            msg =       "*" + word + "*\n"
+            msg = msg + "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
+            update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
 
+        print("Checking Base Assets for: " + word)
+        if binance.checkIfBaseAsset(word):
+            logger.info("Base Asset Detected " + word)
+            #provide USD and BTC pairs
+            msg =""
+            if binance.checkIfPairExists(word + "BTC"):
+                btcPair = word + "BTC"
+                logger.info("BTC pair detected " + btcPair)
+                pairInfo = binance.getPrice(btcPair)
+                msg += "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2] + "\n"
+            if binance.checkIfPairExists(word + "USDT"):
+                usdtPair = word + "USDT"
+                logger.info("USDT pair detected " + usdtPair)
+                pairInfo = binance.getPrice(usdtPair)
+                msg += "1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
+            
+            update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
+
+
+        
 #Alert Conversation handlers
 def alertAdd(update, context):
     user = update.message.from_user
@@ -99,7 +122,7 @@ def alertAdd(update, context):
         if len(context.args) != 3:
             update.message.reply_text("Seems like you sent me " + str(len(context.args) + 
                 "\nPlease send me the alert information as _/addAlert PAIR price above/below_" + 
-                "\nFor example: _/addAlert XRPBTC 0.00003 above_", parse_mode=ParseMode.MARKDOWN)
+                "\nFor example: _/addAlert XRPBTC 0.00003 above_", parse_mode=ParseMode.MARKDOWN))
             return BEGIN
 
 
@@ -284,7 +307,6 @@ def main():
         telegramToken = config.get("telegram", "token_dev")
 
     
-
     logger.info("  - Configuration Path: %s", configurationPath)
     logger.info("  - Log Path: %s", ownLogPath)
     logger.info("  - Telegram Token: %s", telegramToken)
@@ -297,25 +319,25 @@ def main():
     dp = updater.dispatcher
 
     # Add conversation handler to AddAlert Command
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('addAlert', alertAdd)],
-        states={
-            BEGIN: [MessageHandler(Filters.text, alertAdd)],
-            PAIR: [MessageHandler(Filters.text, alertPair)],
-            PRICE: [MessageHandler(Filters.text, alertPrice)],
-            DIRECTION: [MessageHandler(Filters.regex('^(Above|above|Below|below)$'), alertDirection)],
-            ConversationHandler.TIMEOUT: [MessageHandler(Filters.all, conversationTimeout)]
-        },
+    # conv_handler = ConversationHandler(
+    #     entry_points=[CommandHandler('addAlert', alertAdd)],
+    #     states={
+    #         BEGIN: [MessageHandler(Filters.text, alertAdd)],
+    #         PAIR: [MessageHandler(Filters.text, alertPair)],
+    #         PRICE: [MessageHandler(Filters.text, alertPrice)],
+    #         DIRECTION: [MessageHandler(Filters.regex('^(Above|above|Below|below)$'), alertDirection)],
+    #         ConversationHandler.TIMEOUT: [MessageHandler(Filters.all, conversationTimeout)]
+    #     },
 
-        fallbacks=[CommandHandler('cancel', cancel)],
-        allow_reentry=True,
-        conversation_timeout = timeout)
+    #     fallbacks=[CommandHandler('cancel', cancel)],
+    #     allow_reentry=True,
+    #     conversation_timeout = timeout)
 
-    # on different commands - answer in Telegram
-    dp.add_handler(conv_handler)
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help_command))
-    dp.add_handler(CommandHandler("support", help_command))
+    # # on different commands - answer in Telegram
+    # dp.add_handler(conv_handler)
+    # dp.add_handler(CommandHandler("start", start))
+    # dp.add_handler(CommandHandler("help", help_command))
+    # dp.add_handler(CommandHandler("support", help_command))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, checkForPair))
