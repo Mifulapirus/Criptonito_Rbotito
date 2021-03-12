@@ -29,17 +29,34 @@ import json
 
 import binance
 
+forbiddenWords = ['ALGO', 'BOT']
 
 #Default Paths
-ownName = os.path.basename(__file__)
-ownPath = sys.argv[0].replace('\\' + ownName, '')
-logsPath = ownPath + "//logs"
-ownLogPath = logsPath + "/criptonito.log"
-configurationPath = ownPath + "//config.ini"
+if (os.name == 'nt'):
+    print("OS is Windows")
+    ownName = os.path.basename(__file__)
+    ownPath = sys.argv[0].replace('\\' + ownName, '')
+    logsPath = ownPath + "//logs"
+    ownLogPath = logsPath + "//criptonito.log"
+    configurationPath = ownPath + "/config.ini"
+else:
+    #Default Paths
+    print("OS is Linux")
+    ownName = os.path.basename(__file__)
+    ownPath = sys.argv[0].replace('/' + ownName, '')
+    logsPath = ownPath + "/logs"
+    ownLogPath = logsPath + "/criptonito.log"
+    configurationPath = ownPath + "/config.ini"
 
+print("These are the paths")
+print(ownName)
+print(ownPath)
+print(logsPath)
+print(ownLogPath)
+print(configurationPath)
+print("************")
 # read configuration
 config = ConfigParser()
-print(ownPath)
 config.read(configurationPath, "utf8")
 timeout = int(config.get("telegram", "timeout"))
 owner_id = str(config.get("telegram", "owner_id"))
@@ -81,31 +98,34 @@ def checkForPair(update, context):
     """Echo the user message."""
     text = update.message.text.upper()    
     for word in text.split():
-        print("Checking for pair on text: " + word)
-        if binance.checkIfPairExists(word):
-            logger.info("Pair detected " + word)
-            pairInfo = binance.getPrice(word)
-            msg =       "*" + word + "*\n"
-            msg = msg + "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
-            update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
+        if word in forbiddenWords:
+            print(word + " is a forbidden word")
+        else:
+            print("Checking for pair on text: " + word)
+            if binance.checkIfPairExists(word):
+                logger.info("Pair detected " + word)
+                pairInfo = binance.getPrice(word)
+                msg =       "*" + word + "*\n"
+                msg = msg + "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
+                update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
 
-        print("Checking Base Assets for: " + word)
-        if binance.checkIfBaseAsset(word):
-            logger.info("Base Asset Detected " + word)
-            #provide USD and BTC pairs
-            msg =""
-            if binance.checkIfPairExists(word + "BTC"):
-                btcPair = word + "BTC"
-                logger.info("BTC pair detected " + btcPair)
-                pairInfo = binance.getPrice(btcPair)
-                msg += "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2] + "\n"
-            if binance.checkIfPairExists(word + "USDT"):
-                usdtPair = word + "USDT"
-                logger.info("USDT pair detected " + usdtPair)
-                pairInfo = binance.getPrice(usdtPair)
-                msg += "1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
-            
-            update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
+            print("Checking Base Assets for: " + word)
+            if binance.checkIfBaseAsset(word):
+                logger.info("Base Asset Detected " + word)
+                #provide USD and BTC pairs
+                msg =""
+                if binance.checkIfPairExists(word + "BTC"):
+                    btcPair = word + "BTC"
+                    logger.info("BTC pair detected " + btcPair)
+                    pairInfo = binance.getPrice(btcPair)
+                    msg += "   1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2] + "\n"
+                if binance.checkIfPairExists(word + "USDT"):
+                    usdtPair = word + "USDT"
+                    logger.info("USDT pair detected " + usdtPair)
+                    pairInfo = binance.getPrice(usdtPair)
+                    msg += "1 " + pairInfo[1] + " = " + pairInfo[0] + " " + pairInfo[2]
+                
+                update.message.reply_text(msg,  parse_mode=ParseMode.MARKDOWN)
 
 
         
