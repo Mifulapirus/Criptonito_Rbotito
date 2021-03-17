@@ -96,7 +96,7 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 def checkForPair(update, context):
     """Echo the user message."""
-    #text = update.message.text.upper()    
+    text = update.message.text
     for word in text.split():
         if word in forbiddenWords:
             print(word + " is a forbidden word")
